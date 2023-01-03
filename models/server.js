@@ -3,6 +3,7 @@ const express  = require('express');
 const http     = require('http');
 const socketio = require('socket.io');
 const path     = require('path');
+const cors     = require('cors')
 
 const Sockets  = require('./sockets');
 
@@ -18,18 +19,31 @@ class Server {
         
         // Configuraciones de sockets
         this.io = socketio( this.server, { /* configuraciones */ } );
+
+        // inicializacion de sockets
+        this.sockets = new Sockets( this.io );
     }
 
     middlewares() {
         // Desplegar el directorio público
         this.app.use( express.static( path.resolve( __dirname, '../public' ) ) );
+        // configurar cors
+        this.app.use( cors())
+
+        //endpoint
+        this.app.get('/last',(req,res)=>{
+            res.json({
+                ok:true,
+                last: this.sockets.ticketList.last13
+            })
+        })
     }
 
     // Esta configuración se puede tener aquí o como propieda de clase
     // depende mucho de lo que necesites
-    configurarSockets() {
-        new Sockets( this.io );
-    }
+    // configurarSockets() {
+    //     new Sockets( this.io );
+    // }
 
     execute() {
 
@@ -37,7 +51,7 @@ class Server {
         this.middlewares();
 
         // Inicializar sockets
-        this.configurarSockets();
+        // this.configurarSockets();
 
         // Inicializar Server
         this.server.listen( this.port, () => {
